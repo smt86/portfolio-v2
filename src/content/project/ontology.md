@@ -13,7 +13,7 @@ skills:
   - LLMs
 links:
   - name: Website
-    url: https://ontology.mit.edu
+    url: https://ontology.mit.edu/landing#paper
   - name: GitHub
     url: https://github.com/MIT-Center-for-Collective-Intelligence/1Ontology
 ---
