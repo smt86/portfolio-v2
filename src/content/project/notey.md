@@ -28,13 +28,6 @@ I like to take notes, creating a knowledge base, documenting my progresses, sket
 
 ---
 
-## Development Log
-### Year
-- 2024 *(v01 fixes & initiating 02)*
-- 2023
-
----
-
 ## Gallery
 ### Version 01
 ![notey v01 screen](../../assets/projects/notey_02.png)

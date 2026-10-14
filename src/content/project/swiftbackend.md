@@ -46,11 +46,3 @@ SwiftBackend is designed around a microservice architecture consisting of:
 - API Generation Service
 
 The goal is to explore how backend infrastructure can be standardized and automated while remaining flexible enough for different applications.
-
----
-
-## Development Log
-
-### Year
-
-- 2024 *(initial development)*

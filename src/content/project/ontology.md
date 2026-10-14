@@ -52,13 +52,3 @@ Firestore's document size limitations required restructuring how tree and graph 
 ### Real-Time Collaboration
 
 Supporting collaborative editing required integrating Yjs while ensuring changes remained synchronized and persisted correctly across multiple users.
-
----
-
-## Development Log
-
-### Year
-
-- 2026 *(ongoing development)*
-- 2025
-- 2024 *(initial development)*

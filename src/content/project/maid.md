@@ -8,7 +8,7 @@ skills:
   - DiscordJS
 links:
   - name: GitHub
-    url: https://github.com/somin0016/maid_v3
+    url: https://github.com/smt86/maid_v3
 ---
 
 ![Maid Bot in Discord Chat](../../assets/projects/maid_01.png)
