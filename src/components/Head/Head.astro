@@ -12,7 +12,11 @@ const { title, description, image = "/og_image.png" } = Astro.props;
 <!-- Global Metadata -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<link rel="icon" href="/favicon.ico" />
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta name="theme-color" content="#FAFAF7" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1C1A17" media="(prefers-color-scheme: dark)" />
 <meta name="generator" content={Astro.generator} />
 
 <!-- Custom Fonts -->
