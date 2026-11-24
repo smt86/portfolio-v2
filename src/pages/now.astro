@@ -4,7 +4,7 @@ component: true;
 
 import Layout from "../layouts/Layout.astro";
 import Section from "../components/Elements/Section/Section.astro";
-import AlbumList from "../components/Song/AlbumList";
+import AlbumList from "../components/Song/AlbumList.astro";
 import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
 
@@ -47,7 +47,7 @@ const games = [
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
       <div class="sm:col-span-2">
         <Section title="Music" circle="#F24822">
-          <AlbumList client:load />
+          <AlbumList />
         </Section>
       </div>
       <div class="sm:col-span-1">

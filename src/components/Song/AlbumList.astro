@@ -1,0 +1,225 @@
+---
+/**
+ * Recent scrobbles from Last.fm, fetched in the browser on every visit.
+ */
+---
+
+<div data-album-list>
+  <div data-state="loading" role="status" class="mt-2">
+    <svg
+      aria-hidden="true"
+      class="inline w-6 h-6 text-border animate-spin fill-fg"
+      viewBox="0 0 100 101"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+        fill="currentColor"></path>
+      <path
+        d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+        fill="currentFill"></path>
+    </svg>
+    <span class="sr-only">Loading...</span>
+  </div>
+
+  <p data-state="empty" class="mt-2 text-sm text-muted" hidden>
+    Not listening to any music recently~
+  </p>
+
+  <ul data-state="list" class="divide-y divide-border" hidden></ul>
+
+  <!-- Row template, cloned per track by the script -->
+  <template data-row>
+    <li>
+      <div class="flex items-center gap-3 py-3">
+        <img
+          class="w-12 h-12 rounded-md object-cover flex-shrink-0 bg-surface"
+          width="48"
+          height="48"
+          loading="lazy"
+        />
+        <div class="min-w-0">
+          <h3 class="text-sm font-semibold text-fg flex items-center gap-2 min-w-0">
+            <span data-name class="truncate"></span>
+            <span data-now hidden class="eq flex-shrink-0" tabindex="0" aria-label="Listening now">
+              <i></i><i></i><i></i>
+              <span class="eq-tip" role="tooltip" aria-hidden="true">Listening now</span>
+            </span>
+          </h3>
+          <p class="text-xs text-muted truncate" data-artist></p>
+        </div>
+      </div>
+    </li>
+  </template>
+</div>
+
+<style>
+  .eq {
+    position: relative;
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 10px;
+    padding: 4px 3px;
+    margin: -4px -3px;
+    box-sizing: content-box;
+    cursor: default;
+    outline: none;
+  }
+  .eq[hidden] {
+    display: none;
+  }
+  .eq i {
+    display: block;
+    width: 2px;
+    height: 10px;
+    border-radius: 1px;
+    background: var(--color-accent);
+    transform-origin: bottom;
+    animation: eq-bounce 1s ease-in-out infinite;
+  }
+  .eq i:nth-child(2) { animation-delay: -0.3s; }
+  .eq i:nth-child(3) { animation-delay: -0.6s; }
+  @keyframes eq-bounce {
+    0%, 100% { transform: scaleY(0.3); }
+    50% { transform: scaleY(1); }
+  }
+
+  /* Tooltip shown above the bars on hover or keyboard focus */
+  .eq-tip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translate(-50%, 2px);
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--color-fg);
+    color: var(--color-bg);
+    font-size: 0.7rem;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 120ms ease, transform 120ms ease;
+  }
+  .eq-tip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: var(--color-fg);
+  }
+  .eq:hover .eq-tip,
+  .eq:focus-visible .eq-tip {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .eq i { animation: none; transform: scaleY(0.6); }
+    .eq-tip { transition: none; }
+  }
+</style>
+
+<script>
+  import { LASTFM_API_KEY, LASTFM_USER } from "../../constants";
+
+  const API = "https://ws.audioscrobbler.com/2.0/";
+  // Last.fm returns this generic grey image when it has no cover for a track.
+  const PLACEHOLDER = "2a96cbd8b46e442fc41c2b86b821562f";
+  const FETCH_COUNT = 15;
+  const SHOW_COUNT = 5;
+
+  type RecentTrack = {
+    name: string;
+    artist: { "#text": string };
+    image: { size: string; "#text": string }[];
+    "@attr"?: { nowplaying?: string };
+  };
+
+  const lastfm = async (params: Record<string, string>) => {
+    const query = new URLSearchParams({ ...params, api_key: LASTFM_API_KEY ?? "", format: "json" });
+    const res = await fetch(`${API}?${query}`);
+    if (!res.ok) throw new Error(`Last.fm ${params.method} failed: ${res.status}`);
+    return res.json();
+  };
+
+  const largeImage = (images: { size: string; "#text": string }[] | undefined) => {
+    const url = images?.find((img) => img.size === "large")?.["#text"] ?? "";
+    return url && !url.includes(PLACEHOLDER) ? url : "";
+  };
+
+  // Fallback cover lookup for tracks whose bundled image is the placeholder
+  const coverFromTrackInfo = async (artist: string, track: string) => {
+    try {
+      const info = await lastfm({ method: "track.getInfo", artist, track });
+      return largeImage(info?.track?.album?.image);
+    } catch {
+      return "";
+    }
+  };
+
+  const render = async (root: HTMLElement) => {
+    const show = (state: string) => {
+      root.querySelectorAll<HTMLElement>("[data-state]").forEach((el) => {
+        el.hidden = el.dataset.state !== state;
+      });
+    };
+    const list = root.querySelector<HTMLUListElement>("[data-state=list]")!;
+    const template = root.querySelector<HTMLTemplateElement>("template[data-row]")!;
+
+    try {
+      const data = await lastfm({
+        method: "user.getrecenttracks",
+        user: LASTFM_USER,
+        limit: String(FETCH_COUNT),
+      });
+      const all: RecentTrack[] = data?.recenttracks?.track ?? [];
+
+      // Keep the first unique songs so one album on repeat does not fill the list
+      const seen = new Set<string>();
+      const unique: RecentTrack[] = [];
+      for (const track of all) {
+        const key = `${track.name}::${track.artist["#text"]}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        unique.push(track);
+        if (unique.length >= SHOW_COUNT) break;
+      }
+
+      if (unique.length === 0) {
+        show("empty");
+        return;
+      }
+
+      const rows = await Promise.all(
+        unique.map(async (track) => {
+          const artist = track.artist["#text"];
+          const image = largeImage(track.image) || (await coverFromTrackInfo(artist, track.name));
+          return { name: track.name, artist, image, nowPlaying: track["@attr"]?.nowplaying === "true" };
+        })
+      );
+
+      for (const row of rows) {
+        const node = template.content.firstElementChild!.cloneNode(true) as HTMLLIElement;
+        const img = node.querySelector("img")!;
+        img.src = row.image;
+        img.alt = row.name;
+        node.querySelector("[data-name]")!.textContent = row.name;
+        node.querySelector("[data-artist]")!.textContent = row.artist;
+        if (row.nowPlaying) (node.querySelector("[data-now]") as HTMLElement).hidden = false;
+        list.appendChild(node);
+      }
+      show("list");
+    } catch (error) {
+      console.error("[AlbumList] Could not load Last.fm tracks:", error);
+      show("empty");
+    }
+  };
+
+  document.querySelectorAll<HTMLElement>("[data-album-list]").forEach(render);
+</script>

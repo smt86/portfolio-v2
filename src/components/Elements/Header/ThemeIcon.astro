@@ -61,6 +61,16 @@
     }
     window.localStorage.setItem("theme", theme);
 
+    /* Keep the theme-color meta tags matching the active theme, not just the system one. */
+    const THEME_COLORS = { light: "#FAFAF7", dark: "#1C1A17" };
+    const syncThemeColor = () => {
+      const isDark = document.documentElement.classList.contains("dark");
+      document.querySelectorAll('meta[name="theme-color"]').forEach((el) => {
+        el.setAttribute("content", isDark ? THEME_COLORS.dark : THEME_COLORS.light);
+      });
+    };
+    syncThemeColor();
+
     const updateLabels = () => {
       const isDark = document.documentElement.classList.contains("dark");
       document.querySelectorAll(".js-theme-label").forEach((el) => {
@@ -75,6 +85,7 @@
       const isDark = document.documentElement.classList.toggle("dark");
       localStorage.setItem("theme", isDark ? "dark" : "light");
       updateLabels();
+      syncThemeColor();
     });
 
     /* Set initial labels once DOM is ready */
